@@ -1,7 +1,8 @@
+
+
 from board import Board
 from time import sleep
 from greedy import Greedy_AI
-
 from genetic import Genetic_AI
 from mcts import MCTS_AI
 from piece import Piece
@@ -11,14 +12,13 @@ BLACK = 0, 0, 0
 WHITE = 147, 151, 153
 GREEN = (0, 255, 0)
 
-
 class Game:
     def __init__(self, mode, agent=None):
         self.board = Board()
         self.curr_piece = Piece()
         self.y = 20
         self.x = 5
-        self.screenWidth = 500
+        self.screenWidth = 700  # Increased width to accommodate stats display
         self.screenHeight = 1000
         self.top = 0
         self.pieces_dropped = 0
@@ -26,7 +26,7 @@ class Game:
         if mode == "greedy":
             self.ai = Greedy_AI()
         elif mode == "genetic":
-            if agent == None:
+            if agent is None:
                 self.ai = Genetic_AI()
             else:
                 self.ai = agent
@@ -36,7 +36,7 @@ class Game:
             self.ai = None
 
     def run_no_visual(self):
-        if self.ai == None:
+        if self.ai is None:
             return -1
         while True:
             x, piece = self.ai.get_best_move(self.board, self.curr_piece)
@@ -45,17 +45,18 @@ class Game:
             self.drop(y, x=x)
             if self.board.top_filled():
                 break
-        print(self.pieces_dropped, self.rows_cleared)
+        print("Pieces Dropped:", self.pieces_dropped)
+        print("Rows Cleared:", self.rows_cleared)
         return self.pieces_dropped, self.rows_cleared
 
     def run(self):
         pygame.init()
         self.screenSize = self.screenWidth, self.screenHeight
         self.pieceHeight = (self.screenHeight - self.top) / self.board.height
-        self.pieceWidth = self.screenWidth / self.board.width
+        self.pieceWidth = (self.screenWidth - 200) / self.board.width  # Adjust width for stats
         self.screen = pygame.display.set_mode(self.screenSize)
         running = True
-        if self.ai != None:
+        if self.ai is not None:
             MOVEEVENT, t = pygame.USEREVENT + 1, 100
         else:
             MOVEEVENT, t = pygame.USEREVENT + 1, 500
@@ -64,9 +65,8 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-                if self.ai != None:
+                if self.ai is not None:
                     if event.type == MOVEEVENT:
-                        # if event.type == pygame.KEYDOWN:
                         x, piece = self.ai.get_best_move(self.board, self.curr_piece)
                         self.curr_piece = piece
 
@@ -95,13 +95,13 @@ class Game:
                             break
                     continue
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_s:
+                    if event.key == pygame.K_DOWN:
                         y = self.board.drop_height(self.curr_piece, self.x)
                         self.drop(y)
                         if self.board.top_filled():
                             running = False
                             break
-                    if event.key == pygame.K_a:
+                    if event.key == pygame.K_LEFT:
                         if self.x - 1 >= 0:
                             occupied = False
                             for b in self.curr_piece.body:
@@ -112,7 +112,7 @@ class Game:
                                     break
                             if not occupied:
                                 self.x -= 1
-                    if event.key == pygame.K_d:
+                    if event.key == pygame.K_RIGHT:
                         if self.x + 1 <= self.board.width - len(self.curr_piece.skirt):
                             occupied = False
                             for b in self.curr_piece.body:
@@ -123,7 +123,7 @@ class Game:
                                     break
                             if not occupied:
                                 self.x += 1
-                    if event.key == pygame.K_w:
+                    if event.key == pygame.K_UP:
                         self.curr_piece = self.curr_piece.get_next_rotation()
                 if event.type == MOVEEVENT:
                     if self.board.drop_height(self.curr_piece, self.x) == self.y:
@@ -136,13 +136,12 @@ class Game:
             self.draw()
             pygame.display.flip()
         pygame.quit()
-        # print("Game information:")
-        print("Pieces dropped:", self.pieces_dropped)
-        print("Rows cleared:", self.rows_cleared)
+        print("Pieces Dropped:", self.pieces_dropped)
+        print("Rows Cleared:", self.rows_cleared)
         return self.pieces_dropped, self.rows_cleared
 
     def drop(self, y, x=None):
-        if x == None:
+        if x is None:
             x = self.x
         self.board.place(x, y, self.curr_piece)
         self.x = 5
@@ -155,11 +154,12 @@ class Game:
         self.draw_pieces()
         self.draw_hover()
         self.draw_grid()
+        self.draw_stats()  # Add this line to draw the statistics
 
     def draw_grid(self):
         for row in range(0, self.board.height):
             start = (0, row * self.pieceHeight + self.top)
-            end = (self.screenWidth, row * self.pieceHeight + self.top)
+            end = (self.screenWidth - 200, row * self.pieceHeight + self.top)
             pygame.draw.line(self.screen, WHITE, start, end, width=2)
         for col in range(1, self.board.height):
             start = (col * self.pieceWidth, self.top)
@@ -200,3 +200,23 @@ class Game:
                 self.curr_piece.color,
                 pygame.Rect(tl, (self.pieceWidth, self.pieceHeight)),
             )
+
+    def draw_stats(self):
+        font = pygame.font.SysFont(None, 36)  # Font and size for the text
+        stats_surface = pygame.Surface((200, self.screenHeight))  # Surface to draw stats on
+        stats_surface.fill(BLACK)  # Background color for the stats
+
+        # Render text for statistics
+        pieces_text = font.render(f"Pieces Dropped: {self.pieces_dropped}", True, WHITE)
+        rows_text = font.render(f"Rows Cleared: {self.rows_cleared}", True, WHITE)
+
+        # Check text size and update positions if necessary
+        print(f"Pieces text size: {pieces_text.get_size()}")
+        print(f"Rows text size: {rows_text.get_size()}")
+
+        # Position the text
+        stats_surface.blit(pieces_text, (10, 10))
+        stats_surface.blit(rows_text, (10, 50))
+
+        # Draw the stats surface onto the main screen
+        self.screen.blit(stats_surface, (self.screenWidth - 200, 0))

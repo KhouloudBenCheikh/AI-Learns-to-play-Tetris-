@@ -35,18 +35,6 @@ BODIES2 = [
 
 
 class Piece:
-    """
-    A piece is represented with its body and skirt.
-
-    self.body is an array of tuples, where each tuple represents a square in
-    the piece's cartesian coordinate system.
-
-    self.skirt is an array of integers, where self.skirt[i] = the minimum height at x = i
-    in the piece's cartesian coordinate system.
-
-    Refer to this pdf:
-    https://web.stanford.edu/class/archive/cs/cs108/cs108.1092/handouts/11HW2Tetris.pdf
-    """
 
     def __init__(self, body=None, color=None):
         if body == None:
