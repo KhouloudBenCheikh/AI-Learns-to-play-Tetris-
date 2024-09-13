@@ -63,3 +63,6 @@ To run the game with the Genetic Algorithm:
 ```sh
 python src/main.py genetic
 ```
+
+## Author
+This project is maintained by [Khouloud BEN CHEIKH](https://www.linkedin.com/in/khouloudbencheikh/) 🦋
